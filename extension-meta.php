@@ -127,6 +127,8 @@ class WshWordPressPackageParser {
 			'stable' => '',
 			'short_description' => '',
 			'sections' => array(),
+			'wc_requires' => '',
+			'wc_tested' => '',
 		);
 
 		//The readme.txt header has a fairly fixed structure, so we can parse it line-by-line
@@ -147,6 +149,8 @@ class WshWordPressPackageParser {
 			'Requires at least' => 'requires',
 			'Tested up to' => 'tested',
 			'Stable tag' => 'stable',
+			'WC requires at least' => 'wc_requires',
+			'WC tested up to' => 'wc_tested',
 		);
 		do { //Parse each readme.txt header
 			$pieces = explode(':', array_shift($lines), 2);
@@ -263,6 +267,8 @@ class WshWordPressPackageParser {
 			'Network' => 'Network',
 			//Site Wide Only is deprecated in favor of Network.
 			'_sitewide' => 'Site Wide Only',
+			'WC_Requires' => 'WC requires at least',
+			'WC_Tested' => 'WC tested up to',
 		);
 
 		$headers = self::getFileHeaders($fileContents, $pluginHeaderNames);
@@ -374,27 +380,27 @@ class WshWordPressPackageParser {
  * Deprecated. Included for backwards-compatibility.
  *
  * This is an utility function that scans the input file (assumed to be a ZIP archive)
- * to find and parse the plugin's main PHP file and readme.txt file. Plugin metadata from 
- * both files is assembled into an associative array. The structure if this array is 
- * compatible with the format of the metadata file used by the custom plugin update checker 
+ * to find and parse the plugin's main PHP file and readme.txt file. Plugin metadata from
+ * both files is assembled into an associative array. The structure if this array is
+ * compatible with the format of the metadata file used by the custom plugin update checker
  * library available at the below URL.
- * 
+ *
  * @see http://w-shadow.com/blog/2010/09/02/automatic-updates-for-any-plugin/
  * @see https://spreadsheets.google.com/pub?key=0AqP80E74YcUWdEdETXZLcXhjd2w0cHMwX2U1eDlWTHc&authkey=CK7h9toK&hl=en&single=true&gid=0&output=html
- * 
+ *
  * Requires the ZIP extension for PHP.
  * @see http://php.net/manual/en/book.zip.php
- * 
+ *
  * @param string|array $packageInfo Either path to a ZIP file containing a WP plugin, or the return value of analysePluginPackage().
- * @return array Associative array  
+ * @return array Associative array
  */
 function getPluginPackageMeta($packageInfo){
 	if ( is_string($packageInfo) && file_exists($packageInfo) ){
 		$packageInfo = WshWordPressPackageParser::parsePackage($packageInfo, true);
 	}
-	
+
 	$meta = array();
-	
+
 	if ( isset($packageInfo['header']) && !empty($packageInfo['header']) ){
 		$mapping = array(
 			'Name' => 'name',
@@ -406,16 +412,16 @@ function getPluginPackageMeta($packageInfo){
 		foreach($mapping as $headerField => $metaField){
 			if ( array_key_exists($headerField, $packageInfo['header']) && !empty($packageInfo['header'][$headerField]) ){
 				$meta[$metaField] = $packageInfo['header'][$headerField];
-			} 
+			}
 		}
 	}
-	
+
 	if ( !empty($packageInfo['readme']) ){
 		$mapping = array('requires', 'tested');
 		foreach($mapping as $readmeField){
 			if ( !empty($packageInfo['readme'][$readmeField]) ){
 				$meta[$readmeField] = $packageInfo['readme'][$readmeField];
-			} 
+			}
 		}
 		if ( !empty($packageInfo['readme']['sections']) && is_array($packageInfo['readme']['sections']) ){
 			foreach($packageInfo['readme']['sections'] as $sectionName => $sectionContent){
@@ -423,7 +429,7 @@ function getPluginPackageMeta($packageInfo){
 				$meta['sections'][$sectionName] = $sectionContent;
 			}
 		}
-		
+
 		//Check if we have an upgrade notice for this version
 		if ( isset($meta['sections']['upgrade_notice']) && isset($meta['version']) ){
 			$regex = "@<h4>\s*" . preg_quote($meta['version']) . "\s*</h4>[^<>]*?<p>(.+?)</p>@i";
@@ -432,10 +438,10 @@ function getPluginPackageMeta($packageInfo){
 			}
 		}
 	}
-	
+
 	if ( !empty($packageInfo['pluginFile']) ){
 		$meta['slug'] = strtolower(basename(dirname($packageInfo['pluginFile'])));
 	}
-		
+
 	return $meta;
 }
