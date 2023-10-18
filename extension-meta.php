@@ -21,7 +21,7 @@ class WshWordPressPackageParser {
 	 *
 	 * @param string $packageFilename The path to the ZIP package.
 	 * @param bool $applyMarkdown Whether to transform markup used in readme.txt to HTML. Defaults to false.
-	 * @return array Either an associative array or FALSE if the input file is not a valid ZIP archive or doesn't contain a WP plugin or theme.
+	 * @return array|boolean Either an associative array or FALSE if the input file is not a valid ZIP archive or doesn't contain a WP plugin or theme.
 	 */
 	public static function parsePackage($packageFilename, $applyMarkdown = false){
 		if ( !file_exists($packageFilename) || !is_readable($packageFilename) ){
@@ -48,7 +48,8 @@ class WshWordPressPackageParser {
 			$fileName = trim(str_replace('\\', '/', $info['name']), '/');
 			$fileName = ltrim($fileName, '/');
 
-			$extension = strtolower(end(explode('.', $fileName)));
+			$parts = explode('.', $fileName);
+			$extension = strtolower(end($parts));
 			$depth = substr_count($fileName, '/');
 
 			//Skip empty files, directories and everything that's more than 1 sub-directory deep.
@@ -217,6 +218,7 @@ class WshWordPressPackageParser {
 		return $readme;
 	}
 
+	/** @noinspection PhpUnusedPrivateMethodInspection Actually used in parseReadme(). */
 	/**
 	 * Transform Markdown markup to HTML.
 	 *
