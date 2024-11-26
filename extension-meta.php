@@ -211,7 +211,10 @@ class WshWordPressPackageParser {
 
 		//This is only necessary if you intend to later json_encode() the sections.
 		//json_encode() may encode certain strings as NULL if they're not in UTF-8.
-		$sections = array_map('utf8_encode', $sections);
+
+		// TODO Replace the call with mb_convert_encoding($string, 'UTF-8', mb_list_encodings())
+		// @link https://php.watch/versions/8.2/utf8_encode-utf8_decode-deprecated#utf8_encode-iso8859-mbstring
+		//$sections = array_map('utf8_encode', $sections);
 
 		$readme['sections'] = $sections;
 
